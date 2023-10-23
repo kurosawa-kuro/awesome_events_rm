@@ -49,7 +49,16 @@ rails g controller welcome index
 `config/routes.rb` に追加:
 
 ```ruby
-root 'welcome#index'
+Rails.application.routes.draw do
+  root 'welcome#index'
+  resources :events
+  get "/auth/:provider/callback" => "sessions#create"
+  delete "/logout" => "sessions#destroy"
+  
+  resources :events do
+    resources :tickets
+  end 
+end
 ```
 
 ### 7. Bootstrap、jQuery、Popper.js の追加
@@ -150,23 +159,6 @@ bin/rails g controller tickets
 
 ```bash
 bin/rails g controller retirements
-```
-
-### 16. ルーティングの設定
-
-`config/routes.rb` に追加:
-
-```ruby
-Rails.application.routes.draw do
-  root 'welcome#index'
-  resources :events
-  get "/auth/:provider/callback" => "sessions#create"
-  delete "/logout" => "sessions#destroy"
-  
-  resources :events do
-    resources :tickets
-  end 
-end
 ```
 
 ### 17. その他
