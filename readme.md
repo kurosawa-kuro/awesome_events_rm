@@ -26,19 +26,15 @@ config.middleware.use ActionDispatch::Cookies
 config.middleware.use config.session_store, config.session_options
 ```
 
-## 4. Hamlit 関連の gem の追加
-
-Gemfile に以下を追加します。
-
-```ruby
-gem 'hamlit-rails'
-gem 'html2haml'
-```
-
 ## 5. ERB ファイルを HAML に変換
 
 ```bash
 rails hamlit:erb2haml
+```
+
+コメントアウト
+```
+# gem 'html2haml'
 ```
 
 ## 6. Welcome コントローラと index アクションの作成
