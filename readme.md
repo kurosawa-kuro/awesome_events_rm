@@ -84,8 +84,20 @@ import "bootstrap/scss/bootstrap.scss";
       = link_to "AwesomeEvents", root_path, class: "navbar-brand"
       %ul.navbar-nav
         %li.nav-item
-          = link_to "Gihubでログイン", "/auth/github", class: "nav-link", method: :post
+          = link_to "イベントを作る", new_event_path, class: "nav-link"
+
+          %li.nav-item
+            = link_to "ログアウト", logout_path, class: "nav-link", method: :delete
+
+          %li.nav-item
+          = link_to "Gihubでログイン", "/auth/github", class: "nav-link",mehod: :post
   .container
+    - if flash.notice
+      .alert.alert-success
+        = flash.notice
+    - if flash.alert
+      .alert.alert-danger
+        = flash.alert
     = yield
 ```
 
