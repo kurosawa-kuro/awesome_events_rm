@@ -1,21 +1,21 @@
-# awesome\_events アプリケーションのセットアップ手順
+## awesome\_events アプリケーションのセットアップ手順
 
-## 1. 新しい Rails アプリケーションの作成
+### 1. 新しい Rails アプリケーションの作成
 
 ```bash
 rails new awesome_events01 --skip-action-mailer --skip-action-mailbox --skip-action-text --skip-action-cable
 ```
 
-## 2. Babel プラグインの追加
+### 2. Babel プラグインの追加
 
 ```bash
 yarn add --dev @babel/plugin-proposal-private-methods
 yarn add --dev @babel/plugin-proposal-private-property-in-object
 ```
 
-## 3. 初期設定の変更
+### 3. 初期設定の変更
 
-`config/application.rb`に以下を追加します。
+`config/application.rb` に追加:
 
 ```ruby
 config.time_zone = "Tokyo"
@@ -26,47 +26,48 @@ config.middleware.use ActionDispatch::Cookies
 config.middleware.use config.session_store, config.session_options
 ```
 
-## 5. ERB ファイルを HAML に変換
+### 4. ERB ファイルを HAML に変換
 
 ```bash
 rails hamlit:erb2haml
 ```
 
-コメントアウト
+コメントアウト:
+
 ```
 # gem 'html2haml'
 ```
 
-## 6. Welcome コントローラと index アクションの作成
+### 5. Welcome コントローラと index アクションの作成
 
 ```bash
 rails g controller welcome index
 ```
 
-## 7. ルートパスの設定
+### 6. ルートパスの設定
 
-ルーティング設定に以下を追加します。
+`config/routes.rb` に追加:
 
 ```ruby
 root 'welcome#index'
 ```
 
-## 8. Bootstrap、jQuery、Popper.js の追加
+### 7. Bootstrap、jQuery、Popper.js の追加
 
 ```bash
 yarn add bootstrap@4.4.1 jquery@3.5.1 popper.js@1.16.1
 ```
 
-## 9. Bootstrap のインポート
+### 8. Bootstrap のインポート
+
+`rails_training/awesome_events/awesome_events03/app/javascript/packs/application.js` に追加:
 
 ```javascript
-# rails_training/awesome_events/awesome_events03/app/javascript/packs/application.js
-
 import "bootstrap";
 import "bootstrap/scss/bootstrap.scss";
 ```
 
-## 10. アプリケーションのレイアウト
+### 9. アプリケーションのレイアウト
 
 ```haml
 !!!
@@ -101,70 +102,121 @@ import "bootstrap/scss/bootstrap.scss";
     = yield
 ```
 
-## 11. OmniAuth の設定
+### 10. OmniAuth の設定
 
-```
+```bash
 touch config/initializers/omniauth.rb
 ```
 
-`config/initializers/omniauth.rb`に以下を追加します。
+`config/initializers/omniauth.rb` に追加:
 
 ```ruby
 Rails.application.config.middleware.use OmniAuth::Builder do
-  OmniAuth.config.allowed_request_methods = [:get, :post]
-  if Rails.env.development? || Rails.env.test?
-    provider :github, "2e122e66d4597660c5d4", "09bfba470d48627b9f983d91b85c845567fe583c"
-  else
-    provider :github, Rails.application.credentials.github[:client_id], Rails.application.credentials.github[:client_secret]
-  end
+    OmniAuth.config.allowed_request_methods = [:get, :post]
+    if Rails.env.development? || Rails.env.test?
+      provider :github, "2e122e66d4597660c5d4", "09bfba470d48627b9f983d91b85c845567fe583c"
+    else
+      provider :github, Rails.application.credentials.github[:client_id], Rails.application.credentials.github[:client_secret]
+    end
 end
 ```
 
-## 12. User モデルの作成
+### 11. User モデルの作成
 
 ```bash
 bin/rails g model user provider uid name image_url
 ```
 
-## 13. セッション関連のコントローラ作成
+### 12. セッション関連のコントローラ作成
 
 ```bash
 bin/rails g controller sessions
 ```
 
-## 14. イベント関連のリソース作成
+### 13. イベント関連のリソース作成
 
 ```bash
 bin/rails g resource event owner_id:bigint name place start_at:datetime end_at:datetime content:text
 ```
 
-## 15. チケット関連のモデル・コントローラ作成
+### 14. チケット関連のモデル・コントローラ作成
 
 ```bash
 bin/rails g model ticket user:references event:references comment
 bin/rails g controller tickets
 ```
 
-## 16. 退会機能のコントローラ作成
+### 15. 退会機能のコントローラ作成
 
 ```bash
 bin/rails g controller retirements
 ```
 
-## 17. ルーティングの設定
+### 16. ルーティングの設定
 
-`config/routes.rb`に以下を追加します。
+`config/routes.rb` に追加:
 
 ```ruby
 Rails.application.routes.draw do
-  root "welcome#index"
+  root 'welcome#index'
+  resources :events
   get "/auth/:provider/callback" => "sessions#create"
-  delete "/logout" => "sessions#destroy", as: :logout
-
-  resource :retirements
-
+  delete "/logout" => "sessions#destroy"
+  
   resources :events do
     resources :tickets
-  end
+  end 
 end
+```
+
+### 17. その他
+
+ApplicationController:
+
+```ruby
+class ApplicationController < ActionController::Base
+    helper_method :logged_in?
+
+    private
+
+    def logged_in?
+        !!session[:user_id]
+    end
+end
+```
+
+新しいビューファイルの作成:
+
+```bash
+touch app/views/events/new.html.haml
+touch app/views/events/show.html.haml
+```
+
+`app/views/events/show.html.haml` の内容:
+
+```haml
+%h1.mt-3.mb-3= @event.name
+.row
+  .col-8
+    .card.mb-2
+      %h5.card-header イベント内容
+      .card-body
+        %p.card-text= @event.content
+    .card.mb-2
+      %h5.card-header 開催時間
+      .card-body
+        %p.card-text= "#{l(@event.start_at, format: :long)} - #{l(@event.end_at, format: :long)}"
+    .card.mb-2
+      %h5.card-header 開催場所
+      .card-body
+        %p.card-text= @event.place
+    .card.mb-2
+      %h5.card-header 主催者
+      .card-body
+        - if @event.owner
+          = link_to("https://github.com/#{@event.owner.name}", class: "card-link") do
+            = image_tag @event.owner.image_url, width: 50, height: 50
+            = "@#{@event.owner.name}"
+        - else
+          退会したユーザです
 ```
