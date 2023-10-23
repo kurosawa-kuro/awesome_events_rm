@@ -60,6 +60,8 @@ yarn add bootstrap@4.4.1 jquery@3.5.1 popper.js@1.16.1
 ## 9. Bootstrap のインポート
 
 ```javascript
+# rails_training/awesome_events/awesome_events03/app/javascript/packs/application.js
+
 import "bootstrap";
 import "bootstrap/scss/bootstrap.scss";
 ```
@@ -76,14 +78,14 @@ import "bootstrap/scss/bootstrap.scss";
   = csp_meta_tag
   = stylesheet_link_tag "application", media: "all", "data-turbolinks-track": "reload"
   = javascript_pack_tag "application", "data-turbolinks-track": "reload"
-%body.bg-dark
-  %header.navbar.navbar-expand-sm.navbar-light.bg-info
+%body
+  %header.navbar.navbar-expand-sm.navbar-light
     .container
       = link_to "AwesomeEvents", root_path, class: "navbar-brand"
-      %ul.navbar-navbar
+      %ul.navbar-navbar.list-unstyled.mb-0
         %li.nav-item
           = link_to "Gihubでログイン", "/auth/github", class: "nav-link", method: :post
-  .container.bg-light
+  .container
     = yield
 ```
 
