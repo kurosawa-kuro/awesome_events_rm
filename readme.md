@@ -82,7 +82,7 @@ import "bootstrap/scss/bootstrap.scss";
   %header.navbar.navbar-expand-sm.navbar-light
     .container
       = link_to "AwesomeEvents", root_path, class: "navbar-brand"
-      %ul.navbar-navbar.list-unstyled.mb-0
+      %ul.navbar-nav
         %li.nav-item
           = link_to "Gihubでログイン", "/auth/github", class: "nav-link", method: :post
   .container
@@ -90,6 +90,10 @@ import "bootstrap/scss/bootstrap.scss";
 ```
 
 ## 11. OmniAuth の設定
+
+```
+touch config/initializers/omniauth.rb
+```
 
 `config/initializers/omniauth.rb`に以下を追加します。
 
