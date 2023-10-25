@@ -212,3 +212,36 @@ touch app/views/events/show.html.haml
         - else
           退会したユーザです
 ```
+
+### ファイルアップロード
+
+```
+bin/rails active_storage:install
+```
+
+```
+gem 'image_processing', '~> 1.2'
+```
+
+```
+gem 'active_storage_validations', '~> 0.8.8'
+```
+
+```
+sudo apt-get install -y software-properties-common
+sudo add-apt-repository ppa:alex-p/vips
+
+sudo apt-get update
+sudo apt-get install -y libvips
+```
+
+```
+= image_tag @event.image, class: "card-img-top img-size-limit"
+
+.img-size-limit {
+  width: 200px;
+  height: 200px;
+  object-fit: cover;
+}
+```
+
