@@ -69,7 +69,7 @@ yarn add bootstrap@4.4.1 jquery@3.5.1 popper.js@1.16.1
 
 ### 8. Bootstrap のインポート
 
-`rails_training/awesome_events/awesome_events03/app/javascript/packs/application.js` に追加:
+`app/javascript/packs/application.js` に追加:
 
 ```javascript
 import "bootstrap";
