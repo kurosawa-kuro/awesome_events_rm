@@ -400,3 +400,20 @@ Ticket.create!(
   comment: "See you there!"
 )
 ```
+
+#### Rspec
+
+bin/rails g factory_bot:model user
+
+
+bin/rails g factory_bot:model event
+
+bin/rails c
+FactoryBot.create(:event)
+
+ driven_by :selenium, using: :headless_chrome, screen_size: [1400, 1400]
+
+bin/rails generate system_test welcome
+
+bin/rails test/system/welcomes_test.rb
+
