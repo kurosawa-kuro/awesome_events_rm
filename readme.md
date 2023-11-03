@@ -115,13 +115,12 @@ rails g controller welcome index
 ```ruby
 Rails.application.routes.draw do
   root 'welcome#index'
-  resources :events
-  get "/auth/:provider/callback" => "sessions#create"
-  delete "/logout" => "sessions#destroy"
-  resource :retirements, only: %i[new create]
   resources :events do
     resources :tickets
   end 
+  resource :retirements, only: %i[new create]
+  get "/auth/:provider/callback", to: "sessions#create"
+  delete "/logout", to: "sessions#destroy"
 end
 ```
 
