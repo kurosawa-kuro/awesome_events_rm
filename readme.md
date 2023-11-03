@@ -1,62 +1,49 @@
-## awesome\_events アプリケーションのセットアップ手順
+## Awesome Events アプリケーション セットアップ手順
 
 ### 1. 新しい Rails アプリケーションの作成
-
 ```bash
 rails new awesome_events01 --skip-action-mailer --skip-action-mailbox --skip-action-text --skip-action-cable
 ```
 
 ### 2. Babel プラグインの追加
-
 ```bash
 yarn add --dev @babel/plugin-proposal-private-methods
 yarn add --dev @babel/plugin-proposal-private-property-in-object
 ```
 
 ### 3. 初期設定の変更
-
-`config/application.rb` に追加:
-
+追加先: `config/application.rb`
 ```ruby
 config.time_zone = "Tokyo"
 config.i18n.default_locale = :ja
-
 config.session_store :cookie_store, key: '_session'
 config.middleware.use ActionDispatch::Cookies
 config.middleware.use config.session_store, config.session_options
 ```
 
 ### 4. ERB ファイルを HAML に変換
-
 ```bash
 rails hamlit:erb2haml
 ```
-
 コメントアウト:
-
-```
+```ruby
 # gem 'html2haml'
 ```
 
 ### 5. Welcome コントローラと index アクションの作成
-
 ```bash
 rails g controller welcome index
 ```
 
 ### 6. ルートパスの設定
-
-`config/routes.rb` に追加:
-
+追加先: `config/routes.rb`
 ```ruby
 Rails.application.routes.draw do
   root 'welcome#index'
   resources :events
   get "/auth/:provider/callback" => "sessions#create"
   delete "/logout" => "sessions#destroy"
-
   resource :retirements, only: %i[new create]
-  
   resources :events do
     resources :tickets
   end 
@@ -64,22 +51,18 @@ end
 ```
 
 ### 7. Bootstrap、jQuery、Popper.js の追加
-
 ```bash
 yarn add bootstrap@4.4.1 jquery@3.5.1 popper.js@1.16.1
 ```
 
 ### 8. Bootstrap のインポート
-
-`app/javascript/packs/application.js` に追加:
-
+追加先: `app/javascript/packs/application.js`
 ```javascript
 import "bootstrap";
 import "bootstrap/scss/bootstrap.scss";
 ```
 
 ### 9. アプリケーションのレイアウト
-
 ```haml
 !!!
 %html
@@ -116,13 +99,10 @@ import "bootstrap/scss/bootstrap.scss";
 ```
 
 ### 10. OmniAuth の設定
-
 ```bash
 touch config/initializers/omniauth.rb
 ```
-
-`config/initializers/omniauth.rb` に追加:
-
+追加先: `config/initializers/omniauth.rb`
 ```ruby
 Rails.application.config.middleware.use OmniAuth::Builder do
     OmniAuth.config.allowed_request_methods = [:get, :post]
@@ -135,12 +115,11 @@ end
 ```
 
 ### 11. User モデルの作成
-
 ```bash
 bin/rails g model user provider uid name image_url
 ```
-
-```
+マイグレーション:
+```ruby
 class CreateUsers < ActiveRecord::Migration[6.0]
   def change
     create_table :users do |t|
@@ -157,18 +136,16 @@ end
 ```
 
 ### 12. セッション関連のコントローラ作成
-
 ```bash
 bin/rails g controller sessions
 ```
 
 ### 13. イベント関連のリソース作成
-
 ```bash
 bin/rails g resource event owner_id:bigint name place start_at:datetime end_at:datetime content:text
 ```
 
-```bash
+```ruby
 class CreateEvents < ActiveRecord::Migration[6.0]
   def change
     create_table :events do |t|
@@ -186,58 +163,11 @@ class CreateEvents < ActiveRecord::Migration[6.0]
 end
 ```
 
-### 14. チケット関連のモデル・コントローラ作成
-
-```bash
-bin/rails g model ticket user:references event:references comment
-bin/rails g controller tickets
-```
-
-```bash
-class CreateTickets < ActiveRecord::Migration[6.0]
-  def change
-    create_table :tickets do |t|
-      t.references :user
-      t.references :event, null: false, foreign_key: true, index: false
-      t.string :comment
-      t.timestamps
-    end
-
-    add_index :tickets, %i[event_id user_id], unique: true
-  end
-end
-```
-
-### 15. 退会機能のコントローラ作成
-
-```bash
-bin/rails g controller retirements
-```
-
-### 17. その他
-
-ApplicationController:
-
-```ruby
-class ApplicationController < ActionController::Base
-    helper_method :logged_in?
-
-    private
-
-    def logged_in?
-        !!session[:user_id]
-    end
-end
-```
-
-新しいビューファイルの作成:
-
 ```bash
 touch app/views/events/new.html.haml
 touch app/views/events/show.html.haml
+touch app/views/events/edit.html.haml
 ```
-
-`app/views/events/show.html.haml` の内容:
 
 ```haml
 %h1.mt-3.mb-3= @event.name
@@ -266,29 +196,53 @@ touch app/views/events/show.html.haml
           退会したユーザです
 ```
 
-### ファイルアップロード
-
+### 14. チケット関連のモデル・コントローラ作成
+```bash
+bin/rails g model ticket user:references event:references comment
+bin/rails g controller tickets
 ```
+
+```ruby
+class CreateTickets < ActiveRecord::Migration[6.0]
+  def change
+    create_table :tickets do |t|
+      t.references :user
+      t.references :event, null: false, foreign_key: true, index: false
+      t.string :comment
+      t.timestamps
+    end
+
+    add_index :tickets, %i[event_id user_id], unique: true
+  end
+end
+```
+
+### 15. 退会機能のコントローラ作成
+```bash
+bin/rails g controller retirements
+```
+
+```bash
+touch app/views/retirements/new.html.haml
+```
+
+### 16. アプリケーションコントローラの追加機能
+```ruby
+class ApplicationController < ActionController::Base
+    helper_method :logged_in?
+    private
+    def logged_in?
+        !!session[:user_id]
+    end
+end
+```
+
+### 17. ファイルアップロード
+```bash
 bin/rails active_storage:install
 ```
 
-```
-gem 'image_processing', '~> 1.2'
-```
-
-```
-gem 'active_storage_validations', '~> 0.8.8'
-```
-
-```
-sudo apt-get install -y software-properties-common
-sudo add-apt-repository ppa:alex-p/vips
-
-sudo apt-get update
-sudo apt-get install -y libvips
-```
-
-```
+```haml
 = image_tag @event.image, class: "card-img-top img-size-limit"
 
 .img-size-limit {
@@ -298,11 +252,9 @@ sudo apt-get install -y libvips
 }
 ```
 
-### seed
-
-
-
-```
+### 18. シードデータの追加
+追加先: `db/seeds.rb`
+```ruby
 # db/seeds.rb
 
 # User seed data
@@ -374,4 +326,3 @@ Ticket.create!(
   comment: "See you there!"
 )
 ```
-
