@@ -54,6 +54,8 @@ Rails.application.routes.draw do
   resources :events
   get "/auth/:provider/callback" => "sessions#create"
   delete "/logout" => "sessions#destroy"
+
+  resource :retirements, only: %i[new create]
   
   resources :events do
     resources :tickets
@@ -81,34 +83,36 @@ import "bootstrap/scss/bootstrap.scss";
 ```haml
 !!!
 %html
-%head
-  %meta{ content: "text/html; charset=UTF-8", "http-equiv": "Content-Type" }
-  %title AwesomeEvents
-  = csrf_meta_tags
-  = csp_meta_tag
-  = stylesheet_link_tag "application", media: "all", "data-turbolinks-track": "reload"
-  = javascript_pack_tag "application", "data-turbolinks-track": "reload"
-%body
-  %header.navbar.navbar-expand-sm.navbar-light
+  %head
+    %meta{ content: "text/html; charset=UTF-8", "http-equiv": "Content-Type" }
+    %title AwesomeEvents
+    = csrf_meta_tags
+    = csp_meta_tag
+    = stylesheet_link_tag "application", media: "all", "data-turbolinks-track": "reload"
+    = javascript_pack_tag "application", "data-turbolinks-track": "reload"
+  %body
+    %header.navbar.navbar-expand-sm.navbar-light.bg-light
+      .container
+        = link_to "AwesomeEvents", root_path, class: "navbar-brand mr-auto"
+        %ul.navbar-nav
+          %li.nav-item
+            = link_to "イベントを作る", new_event_path, class: "nav-link"
+
+            %li.nav-item
+              = link_to "退会", new_retirements_path, class: "nav-link"
+            %li.nav-item
+              = link_to "ログアウト", logout_path, class: "nav-link", method: :delete
+
+            %li.nav-item
+              = link_to "GitHubでログイン", "/auth/github", class: "nav-link", method: :post
     .container
-      = link_to "AwesomeEvents", root_path, class: "navbar-brand"
-      %ul.navbar-nav
-        %li.nav-item
-          = link_to "イベントを作る", new_event_path, class: "nav-link"
-
-          %li.nav-item
-            = link_to "ログアウト", logout_path, class: "nav-link", method: :delete
-
-          %li.nav-item
-          = link_to "Gihubでログイン", "/auth/github", class: "nav-link",mehod: :post
-  .container
-    - if flash.notice
-      .alert.alert-success
-        = flash.notice
-    - if flash.alert
-      .alert.alert-danger
-        = flash.alert
-    = yield
+      - if flash.notice
+        .alert.alert-success
+          = flash.notice
+      - if flash.alert
+        .alert.alert-danger
+          = flash.alert
+      = yield
 ```
 
 ### 10. OmniAuth の設定
@@ -136,6 +140,22 @@ end
 bin/rails g model user provider uid name image_url
 ```
 
+```
+class CreateUsers < ActiveRecord::Migration[6.0]
+  def change
+    create_table :users do |t|
+      t.string :provider,  null: false
+      t.string :uid,       null: false
+      t.string :name,      null: false
+      t.string :image_url, null: false
+      t.timestamps
+    end
+
+    add_index :users, %i[provider uid], unique: true
+  end
+end
+```
+
 ### 12. セッション関連のコントローラ作成
 
 ```bash
@@ -148,11 +168,44 @@ bin/rails g controller sessions
 bin/rails g resource event owner_id:bigint name place start_at:datetime end_at:datetime content:text
 ```
 
+```bash
+class CreateEvents < ActiveRecord::Migration[6.0]
+  def change
+    create_table :events do |t|
+      t.bigint :owner_id
+      t.string :name,       null: false
+      t.string :place,      null: false
+      t.datetime :start_at, null: false
+      t.datetime :end_at,   null: false
+      t.text :content,      null: false
+      t.timestamps
+    end
+
+    add_index :events, :owner_id
+  end
+end
+```
+
 ### 14. チケット関連のモデル・コントローラ作成
 
 ```bash
 bin/rails g model ticket user:references event:references comment
 bin/rails g controller tickets
+```
+
+```bash
+class CreateTickets < ActiveRecord::Migration[6.0]
+  def change
+    create_table :tickets do |t|
+      t.references :user
+      t.references :event, null: false, foreign_key: true, index: false
+      t.string :comment
+      t.timestamps
+    end
+
+    add_index :tickets, %i[event_id user_id], unique: true
+  end
+end
 ```
 
 ### 15. 退会機能のコントローラ作成
@@ -243,5 +296,82 @@ sudo apt-get install -y libvips
   height: 200px;
   object-fit: cover;
 }
+```
+
+### seed
+
+
+
+```
+# db/seeds.rb
+
+# User seed data
+user1 = User.create!(
+  provider: "github",
+  uid: "uid1",
+  name: "User One",
+  image_url: "https://example.com/user1.jpg"
+)
+
+user2 = User.create!(
+  provider: "github",
+  uid: "uid2",
+  name: "User Two",
+  image_url: "https://example.com/user2.jpg"
+)
+
+user3 = User.create!(
+  provider: "github",
+  uid: "uid3",
+  name: "User Three",
+  image_url: "https://example.com/user3.jpg"
+)
+
+# Event seed data
+event1 = Event.create!(
+  owner: user1,
+  name: "Event One",
+  place: "Place One",
+  start_at: DateTime.now + 1.days,
+  end_at: DateTime.now + 2.days,
+  content: "Event One content here."
+)
+
+event2 = Event.create!(
+  owner: user2,
+  name: "Event Two",
+  place: "Place Two",
+  start_at: DateTime.now + 3.days,
+  end_at: DateTime.now + 4.days,
+  content: "Event Two content here."
+)
+
+event3 = Event.create!(
+  owner: user3,
+  name: "Event Three",
+  place: "Place Three",
+  start_at: DateTime.now + 5.days,
+  end_at: DateTime.now + 6.days,
+  content: "Event Three content here."
+)
+
+# Ticket seed data
+Ticket.create!(
+  user: user1,
+  event: event2,
+  comment: "Looking forward to it!"
+)
+
+Ticket.create!(
+  user: user2,
+  event: event3,
+  comment: "Can't wait!"
+)
+
+Ticket.create!(
+  user: user3,
+  event: event1,
+  comment: "See you there!"
+)
 ```
 
