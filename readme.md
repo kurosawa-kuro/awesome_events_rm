@@ -394,74 +394,49 @@ bin/rails g kaminari:views bootstrap4
 全文検索エンジンElasticsearchを導入します。
 全文検索エンジンElasticsearchをセットアップする手順は以下の通りです。
 
-1. システムのパッケージリストを更新します。
+システムのパッケージリストを更新します。
 
 ```bash
 sudo apt update
-```
-
-2. Java Runtime Environment（JRE）をインストールします。
-
-```bash
 sudo apt install default-jre
-```
-
-3. インストールされたJavaのバージョンを確認します。
-
-```bash
 java -version
 ```
 
-4. Elasticsearchの公式GPGキーを追加します。
+Elasticsearchの公式GPGキーを追加します。
 
 ```bash
 wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
-```
-
-5. Elasticsearchのパッケージリストファイルを追加します。
-
-```bash
 sudo sh -c 'echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" > /etc/apt/sources.list.d/elastic-7.x.list'
-```
-
-6. 再度パッケージリストを更新します。
-
-```bash
 sudo apt update
-```
-
-7. Elasticsearchをインストールします。
-
-```bash
 sudo apt install elasticsearch
 ```
 
-8. Elasticsearchサービスを起動し、システム起動時に自動で起動するように設定します。
+Elasticsearchサービスを起動し、システム起動時に自動で起動するように設定します。
 
 ```bash
 sudo systemctl start elasticsearch
 sudo systemctl enable elasticsearch
 ```
 
-9. Elasticsearchが正しく動作しているか確認します。
+Elasticsearchが正しく動作しているか確認します。
 
 ```bash
 curl -X GET "localhost:9200/"
 ```
 
-10. 日本語解析のためのプラグイン `kuromoji` をインストールします。
+日本語解析のためのプラグイン `kuromoji` をインストールします。
 
 ```bash
 sudo /usr/share/elasticsearch/bin/elasticsearch-plugin install analysis-kuromoji
 ```
 
-11. Elasticsearchサービスを再起動します。
+Elasticsearchサービスを再起動します。
 
 ```bash
 sudo systemctl restart elasticsearch
 ```
 
-12. RailsアプリケーションでElasticsearchのインデックスを作成するために、以下のコマンドを実行します。
+RailsアプリケーションでElasticsearchのインデックスを作成するために、以下のコマンドを実行します。
 
 ```bash
 bin/rails r Event.reindex
