@@ -279,7 +279,7 @@ end
 ```
 
 ### 2. ファイルアップロード機能
-ファイルアップロード機能を設定します。
+#### ファイルアップロード機能を設定します。
 ```bash
 bin/rails active_storage:install
 ```
@@ -294,8 +294,7 @@ bin/rails active_storage:install
 }
 ```
 
-
-ImageMagickのインストール
+#### ImageMagickのインストール
 
 ```
 sudo apt-get update
