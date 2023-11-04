@@ -326,6 +326,20 @@ bin/rails active_storage:install
 }
 ```
 
+
+ImageMagickのインストール
+
+```
+sudo apt-get update
+sudo apt-get install imagemagick -y
+convert --version
+```
+
+```
+# config/environments/development.rb
+config.active_storage.variant_processor = :mini_magick
+```
+
 ### 18. シードデータの追加
 追加先: `db/seeds.rb`
 ```ruby
