@@ -1,12 +1,17 @@
-## Awesome Events アプリケーション セットアップ手順
+# Railsアプリケーションの設定と機能拡張ガイド
 
-### 1. 新しい Rails アプリケーションの作成
+このドキュメントは、Railsアプリケーションの初期設定から機能拡張までを説明しています。
+
+## 初期設定
+
+### 1. プロジェクトの作成
+新規Railsアプリケーションを作成します。
 ```bash
 rails new awesome_events01 --skip-action-mailer --skip-action-mailbox --skip-action-text --skip-action-cable
 ```
 
-### 1. 新しい Rails アプリケーションの作成
-Gemをコピーする
+### 2. Gemファイルの編集
+Gemファイルを編集して、必要なgemを設定します。
 ```ruby
 source 'https://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
@@ -50,6 +55,7 @@ group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug', platforms: [:mri, :mingw, :x64_mingw]
   gem 'factory_bot_rails'
+  gem 'rspec-rails', '~> 5.0'
 end
 
 group :development do
@@ -74,20 +80,23 @@ group :test do
   # Easy installation and use of web drivers to run system tests with browsers
   gem 'webdrivers'
   gem 'simplecov', require: false
+  gem 'faker'
+  gem 'rails-controller-testing'
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 ```
 
-### 2. Babel プラグインの追加
+### 3. プラグインと依存ライブラリ
+Babelプラグインとフロントエンドライブラリを追加します。
 ```bash
 yarn add --dev @babel/plugin-proposal-private-methods
 yarn add --dev @babel/plugin-proposal-private-property-in-object
 ```
 
-### 3. 初期設定の変更
-追加先: `config/application.rb`
+### 4. アプリケーションの基本設定
+アプリケーションのタイムゾーンやルーティングなどを設定します。
 ```ruby
 config.time_zone = "Tokyo"
 config.i18n.default_locale = :ja
@@ -96,83 +105,8 @@ config.middleware.use ActionDispatch::Cookies
 config.middleware.use config.session_store, config.session_options
 ```
 
-### 4. ERB ファイルを HAML に変換
-```bash
-rails hamlit:erb2haml
-```
-コメントアウト:
-```ruby
-# gem 'html2haml'
-```
-
-### 5. Welcome コントローラと index アクションの作成
-```bash
-rails g controller welcome index
-```
-
-### 6. ルートパスの設定
-追加先: `config/routes.rb`
-```ruby
-Rails.application.routes.draw do
-  root 'welcome#index'
-  resources :events do
-    resources :tickets
-  end 
-  resource :retirements, only: %i[new create]
-  get "/auth/:provider/callback", to: "sessions#create"
-  delete "/logout", to: "sessions#destroy"
-end
-```
-
-### 7. Bootstrap、jQuery、Popper.js の追加
-```bash
-yarn add bootstrap@4.4.1 jquery@3.5.1 popper.js@1.16.1
-```
-
-### 8. Bootstrap のインポート
-追加先: `app/javascript/packs/application.js`
-```javascript
-import "bootstrap";
-import "bootstrap/scss/bootstrap.scss";
-```
-
-### 9. アプリケーションのレイアウト
-```haml
-!!!
-%html
-  %head
-    %meta{ content: "text/html; charset=UTF-8", "http-equiv": "Content-Type" }
-    %title AwesomeEvents
-    = csrf_meta_tags
-    = csp_meta_tag
-    = stylesheet_link_tag "application", media: "all", "data-turbolinks-track": "reload"
-    = javascript_pack_tag "application", "data-turbolinks-track": "reload"
-  %body
-    %header.navbar.navbar-expand-sm.navbar-light.bg-light
-      .container
-        = link_to "AwesomeEvents", root_path, class: "navbar-brand mr-auto"
-        %ul.navbar-nav
-          %li.nav-item
-            = link_to "イベントを作る", new_event_path, class: "nav-link"
-
-            %li.nav-item
-              = link_to "退会", new_retirements_path, class: "nav-link"
-            %li.nav-item
-              = link_to "ログアウト", logout_path, class: "nav-link", method: :delete
-
-            %li.nav-item
-              = link_to "GitHubでログイン", "/auth/github", class: "nav-link", method: :post
-    .container
-      - if flash.notice
-        .alert.alert-success
-          = flash.notice
-      - if flash.alert
-        .alert.alert-danger
-          = flash.alert
-      = yield
-```
-
-### 10. OmniAuth の設定
+### 5. 認証設定
+OmniAuthによる認証機能を設定します。
 ```bash
 touch config/initializers/omniauth.rb
 ```
@@ -188,33 +122,35 @@ Rails.application.config.middleware.use OmniAuth::Builder do
 end
 ```
 
-### 11. User モデルの作成
+## コード変換とフレームワーク
+
+### 1. ERBからHAMLへの変換
+ERBファイルをHAMLに変換します。
 ```bash
-bin/rails g model user provider uid name image_url
-```
-マイグレーション:
-```ruby
-class CreateUsers < ActiveRecord::Migration[6.0]
-  def change
-    create_table :users do |t|
-      t.string :provider,  null: false
-      t.string :uid,       null: false
-      t.string :name,      null: false
-      t.string :image_url, null: false
-      t.timestamps
-    end
-
-    add_index :users, %i[provider uid], unique: true
-  end
-end
+rails hamlit:erb2haml
 ```
 
-### 12. セッション関連のコントローラ作成
+### 2. Bootstrapの導入
+Bootstrapをインポートし、アプリケーションで使用できるようにします。
+```javascript
+import "bootstrap";
+import "bootstrap/scss/bootstrap.scss";
+```
+
+## コントローラとビュー
+
+### 1. Welcomeコントローラとビュー
+Welcomeページ用のコントローラとビューを生成します。
+```bash
+rails g controller welcome index
+```
+
+### 2. その他のコントローラとビュー
+セッション、イベントなどのコントローラとビューを生成します。
 ```bash
 bin/rails g controller sessions
 ```
 
-### 13. イベント関連のリソース作成
 ```bash
 bin/rails g resource event owner_id:bigint name place start_at:datetime end_at:datetime content:text
 ```
@@ -270,7 +206,6 @@ touch app/views/events/edit.html.haml
           退会したユーザです
 ```
 
-### 14. チケット関連のモデル・コントローラ作成
 ```bash
 bin/rails g model ticket user:references event:references comment
 bin/rails g controller tickets
@@ -291,7 +226,6 @@ class CreateTickets < ActiveRecord::Migration[6.0]
 end
 ```
 
-### 15. 退会機能のコントローラ作成
 ```bash
 bin/rails g controller retirements
 ```
@@ -300,7 +234,40 @@ bin/rails g controller retirements
 touch app/views/retirements/new.html.haml
 ```
 
-### 16. アプリケーションコントローラの追加機能
+## モデルとデータベース
+
+### 1. Userモデル
+Userモデルを作成し、データベースに反映します。
+```bash
+bin/rails g model user provider uid name image_url
+```
+
+```ruby
+class CreateUsers < ActiveRecord::Migration[6.0]
+  def change
+    create_table :users do |t|
+      t.string :provider,  null: false
+      t.string :uid,       null: false
+      t.string :name,      null: false
+      t.string :image_url, null: false
+      t.timestamps
+    end
+
+    add_index :users, %i[provider uid], unique: true
+  end
+end
+```
+
+### 2. その他のモデル
+イベントやチケットのモデルを作成します。
+```bash
+# 省略（変更なし）
+```
+
+## アプリケーション詳細設定
+
+### 1. アプリケーションコントローラ
+セキュリティやヘルパーメソッドに関する設定を行います。
 ```ruby
 class ApplicationController < ActionController::Base
     helper_method :logged_in?
@@ -311,7 +278,8 @@ class ApplicationController < ActionController::Base
 end
 ```
 
-### 17. ファイルアップロード
+### 2. ファイルアップロード機能
+ファイルアップロード機能を設定します。
 ```bash
 bin/rails active_storage:install
 ```
@@ -340,8 +308,8 @@ convert --version
 config.active_storage.variant_processor = :mini_magick
 ```
 
-### 18. シードデータの追加
-追加先: `db/seeds.rb`
+### 3. シードデータ
+開発用のサンプルデータを追加します。
 ```ruby
 # db/seeds.rb
 
@@ -415,19 +383,87 @@ Ticket.create!(
 )
 ```
 
-#### Rspec
+## 機能の拡張
 
-bin/rails g factory_bot:model user
+### 1. ページネーションの設定
+Kaminariを利用してページネーション機能を導入します。
+```bash
+bin/rails g kaminari:views bootstrap4
+```
 
+### 2. Elasticsearchのセットアップ
+全文検索エンジンElasticsearchを導入します。
+全文検索エンジンElasticsearchをセットアップする手順は以下の通りです。
 
-bin/rails g factory_bot:model event
+1. システムのパッケージリストを更新します。
 
-bin/rails c
-FactoryBot.create(:event)
+```bash
+sudo apt update
+```
 
- driven_by :selenium, using: :headless_chrome, screen_size: [1400, 1400]
+2. Java Runtime Environment（JRE）をインストールします。
 
-bin/rails generate system_test welcome
+```bash
+sudo apt install default-jre
+```
 
-bin/rails test/system/welcomes_test.rb
+3. インストールされたJavaのバージョンを確認します。
 
+```bash
+java -version
+```
+
+4. Elasticsearchの公式GPGキーを追加します。
+
+```bash
+wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
+```
+
+5. Elasticsearchのパッケージリストファイルを追加します。
+
+```bash
+sudo sh -c 'echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" > /etc/apt/sources.list.d/elastic-7.x.list'
+```
+
+6. 再度パッケージリストを更新します。
+
+```bash
+sudo apt update
+```
+
+7. Elasticsearchをインストールします。
+
+```bash
+sudo apt install elasticsearch
+```
+
+8. Elasticsearchサービスを起動し、システム起動時に自動で起動するように設定します。
+
+```bash
+sudo systemctl start elasticsearch
+sudo systemctl enable elasticsearch
+```
+
+9. Elasticsearchが正しく動作しているか確認します。
+
+```bash
+curl -X GET "localhost:9200/"
+```
+
+10. 日本語解析のためのプラグイン `kuromoji` をインストールします。
+
+```bash
+sudo /usr/share/elasticsearch/bin/elasticsearch-plugin install analysis-kuromoji
+```
+
+11. Elasticsearchサービスを再起動します。
+
+```bash
+sudo systemctl restart elasticsearch
+```
+
+12. RailsアプリケーションでElasticsearchのインデックスを作成するために、以下のコマンドを実行します。
+
+```bash
+bin/rails r Event.reindex
+```
